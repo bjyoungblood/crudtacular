@@ -15,7 +15,7 @@ function prepareModel(request) {
       }
 
       qb.offset(request.getPaginationOffset())
-      .limit(limit);
+        .limit(limit);
     });
   }
 
@@ -33,7 +33,18 @@ export default function(request, reply) {
 
   let promise = {};
 
-  promise.results = prepareModel(request).fetchAll({
+  let results = prepareModel(request);
+
+  if (settings.enableSorting) {
+    let sort = request.getSort();
+    if (sort.sort) {
+      results.query((qb) => {
+        qb.orderBy(sort.sort, sort.dir);
+      });
+    }
+  }
+
+  promise.results = results.fetchAll({
     withRelated : settings.withRelated,
   });
 

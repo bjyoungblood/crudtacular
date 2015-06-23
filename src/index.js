@@ -39,6 +39,18 @@ let handlerOptionsSchema = Joi.object().keys({
   // Sets the maximum items-per-page/limit allowed in the querystring
   maxLimit : Joi.number(),
 
+  // Enable or disable sorting
+  enableSorting : Joi.boolean().default(true),
+
+  // Sets the default sort attribute
+  defaultSort : Joi.string().default('id'),
+
+  // Sets the default sort diresction
+  defaultSortDir : Joi.allow('asc', 'desc').default('asc'),
+
+  // Sets a list of columns that can be sortable
+  sortableColumns : Joi.array().items(Joi.string()),
+
   // Includes the given relations with the model; equivalent to calling
   // `Model.fetch({ withRelated : <items> })`
   withRelated : Joi.array().items(Joi.string()).default([]),
@@ -79,7 +91,7 @@ function register(server, options, next) {
     }
 
     if (settings.enablePagination) {
-      filters = _.omit(filters, 'offset', 'limit');
+      filters = _.omit(filters, 'offset', 'limit', 'sort', 'dir');
     }
 
     if (settings.filterWhitelist) {
@@ -120,6 +132,26 @@ function register(server, options, next) {
 
     return {
       [ settings.deletedAttr ] : notDeletedValue,
+    };
+  });
+
+  server.decorate('request', 'getSort', function() {
+    const settings = this.route.settings.plugins.crudtacular;
+
+    let sort = this.query.sort || settings.defaultSort;
+    let dir = this.query.dir || settings.defaultSortDir;
+
+    if (settings.sortableColumns.length && ! _.contains(settings.sortableColumns, sort)) {
+      sort = settings.defaultSort;
+    }
+
+    if (dir !== 'asc' && dir !== 'desc') {
+      dir = settings.defaultSortDir;
+    }
+
+    return {
+      sort,
+      dir,
     };
   });
 
