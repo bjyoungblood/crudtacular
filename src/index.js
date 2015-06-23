@@ -79,7 +79,7 @@ function register(server, options, next) {
     }
 
     if (settings.enablePagination) {
-      filters = _.omit(filters, 'page', 'limit');
+      filters = _.omit(filters, 'offset', 'limit');
     }
 
     if (settings.filterWhitelist) {
