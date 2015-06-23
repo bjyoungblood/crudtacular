@@ -8,8 +8,14 @@ function prepareModel(request) {
 
   if (settings.enablePagination) {
     model.query((qb) => {
+      let limit = request.getPaginationLimit();
+
+      if (! limit) {
+        return;
+      }
+
       qb.offset(request.getPaginationOffset())
-      .limit(request.getPaginationLimit());
+      .limit(limit);
     });
   }
 
@@ -23,26 +29,32 @@ function prepareModel(request) {
 }
 
 export default function(request, reply) {
-
   let settings = request.route.settings.plugins.crudtacular;
 
-  let countPromise = prepareModel(request).query((qb) => {
-    qb.count();
-  })
-    .fetch()
-    .then((result) => {
-      return result;
-    });
+  let promise = {};
 
-  let resultPromise = prepareModel(request).fetchAll({
+  promise.results = prepareModel(request).fetchAll({
     withRelated : settings.withRelated,
   });
 
-  Promise.join(resultPromise, countPromise, (result, count) => {
-    reply(result).header(settings.countHeaderName, count.get('count'));
-  }).catch((err) => {
-    reply(err);
-  });
+  if (settings.includeCount) {
+    promise.count = prepareModel(request)
+      .query((qb) => {
+        qb.count();
+      })
+      .fetch();
+  }
 
+  Promise.props(promise)
+    .then((resolved) => {
+      let resp = reply(resolved.results);
+
+      if (resolved.count) {
+        resp.header(settings.countHeaderName, resolved.count.get('count'));
+      }
+    })
+    .catch((err) => {
+      reply(err);
+    });
 
 }

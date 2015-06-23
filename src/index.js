@@ -98,13 +98,13 @@ function register(server, options, next) {
   server.decorate('request', 'getPaginationLimit', function() {
     const settings = this.route.settings.plugins.crudtacular;
 
-    let limit = Number(this.query) || settings.limit;
+    let limit = this.query.limit ? this.query.limit : settings.limit;
 
     if (settings.maxLimit && limit > settings.maxLimit) {
       limit = settings.maxLimit;
     }
 
-    return limit || 0;
+    return Number(limit);
   });
 
   server.decorate('request', 'getDeletedAttrFilter', function() {
