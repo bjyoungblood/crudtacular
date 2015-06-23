@@ -39,7 +39,6 @@ export default function(request, reply) {
   });
 
   Promise.join(resultPromise, countPromise, (result, count) => {
-    console.log(settings.countHeaderName, count.get('count'));
     reply(result).header(settings.countHeaderName, count.get('count'));
   }).catch((err) => {
     reply(err);
