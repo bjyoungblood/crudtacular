@@ -1,0 +1,37 @@
+{
+  "name": "crudtacular",
+  "version": "0.0.1",
+  "description": "Auto-generated CRUD routes for Hapi and Bookshelf",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublish": "make dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bjyoungblood/crudtacular.git"
+  },
+  "keywords": [
+    "hapi",
+    "bookshelf",
+    "crud"
+  ],
+  "author": "Ben Youngblood",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bjyoungblood/crudtacular/issues"
+  },
+  "homepage": "https://github.com/bjyoungblood/crudtacular#readme",
+  "dependencies": {
+    "bluebird": "^2.9.30",
+    "boom": "^2.8.0",
+    "call": "1.x.x",
+    "joi": "^6.4.3",
+    "lodash": "^3.9.3"
+  },
+  "devDependencies": {
+    "babel": "^5.5.8",
+    "babel-eslint": "^3.1.17",
+    "eslint": "^0.23.0"
+  }
+}
