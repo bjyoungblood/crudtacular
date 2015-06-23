@@ -15,6 +15,7 @@ export default function(request, reply) {
     require : true,
     withRelated : settings.withRelated,
   })
+    .then(() => model.toJSON())
     .catch(settings.model.NotFoundError, () => {
       throw Boom.notFound();
     });

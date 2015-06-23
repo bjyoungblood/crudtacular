@@ -58,7 +58,7 @@ export default function(request, reply) {
 
   Promise.props(promise)
     .then((resolved) => {
-      let resp = reply(resolved.results);
+      let resp = reply(resolved.results.toJSON());
 
       if (resolved.count) {
         resp.header(settings.countHeaderName, resolved.count.get('count'));
