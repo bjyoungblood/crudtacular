@@ -1,8 +1,13 @@
+import _ from 'lodash';
 import Call from 'call';
 
 import actions from './actions';
 
 const router = new Call.Router({});
+
+function getPathWithoutPrefix(path, prefix) {
+  return path.replace(prefix, '');
+}
 
 function parseCrudPath(path) {
   let segments = router.analyze(path).segments;
@@ -112,8 +117,9 @@ function destroy(route) {
   }
 }
 
-export function getHandler(route) {
-  route.settings.plugins.crudtacular = parseCrudPath(route.path);
+export function getHandler(route, options) {
+  let path = getPathWithoutPrefix(route.path, options.pathPrefix);
+  route.settings.plugins.crudtacular = _.merge(parseCrudPath(path), options);
 
   switch (route.method) {
     case 'get':

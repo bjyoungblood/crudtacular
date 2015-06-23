@@ -73,8 +73,7 @@ function register(server, options, next) {
 
     handlerOptions = validate.value;
 
-    let handler = getHandler(route);
-    _.merge(route.settings.plugins.crudtacular, handlerOptions);
+    let handler = getHandler(route, handlerOptions);
     return handler;
   });
 
