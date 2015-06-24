@@ -28,12 +28,6 @@ let handlerOptionsSchema = Joi.object().keys({
   // `Model.fetch({ withRelated : <items> })`
   withRelated : Joi.array().items(Joi.string()).default([]),
 
-  // For POST, PUT, and PATCH methods, this function will be called to perform any
-  // necessary transformation of the request payload (such as bcrypting a password).
-  // signature: `transform(request, callback)`. The callback accepts the parameters:
-  // `callback(err, transformedPayload)`
-  transformPayload : Joi.func().optional(),
-
   filtering : Joi.alternatives().try(
     Joi.boolean().valid(false),
     Joi.object().keys({
