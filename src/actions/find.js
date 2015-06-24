@@ -66,7 +66,6 @@ export default function(request, reply) {
       }
     })
     .catch((err) => {
-      console.log(err.stack);
       reply(err);
     });
 
