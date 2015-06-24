@@ -12,6 +12,7 @@ let handlerOptionsSchema = Joi.object().keys({
   // The Backbone collection associated with the model
   collection : Joi.func().required(),
 
+  // Any path prefix. If your path is `/api/users/1`, then the prefix would be `/api`
   pathPrefix : Joi.string().default(''),
 
   // Using a deleted attribute, you can define a field in your table (e.g., is_deleted)
@@ -61,6 +62,12 @@ let handlerOptionsSchema = Joi.object().keys({
 
   // Name of the header that contains the count of all records
   countHeaderName : Joi.string().default('X-Count'),
+
+  // For POST, PUT, and PATCH methods, this function will be called to perform any
+  // necessary transformation of the request payload (such as bcrypting a password).
+  // signature: `transform(request, callback)`. The callback accepts the parameters:
+  // `callback(err, transformedPayload)`
+  transformPayload : Joi.func().optional(),
 });
 
 function register(server, options, next) {
