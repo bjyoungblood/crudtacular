@@ -24,55 +24,76 @@ let handlerOptionsSchema = Joi.object().keys({
   // like is_deleted = true/false; timestamp could be used for deleted_at = NOW()
   deletedAttrType : Joi.allow([ 'boolean', 'timestamp' ]).default('boolean'),
 
-  // Whitelisting allows you to define a set of fields that can be filtered on
-  filterWhitelist : Joi.array().items(Joi.string()),
-
-  // Blacklisting allows you to define a set of fields that cannot be filtered on
-  // If `filterWhitelist` is specified, this option will be ignored
-  filterBlacklist : Joi.array().items(Joi.string()),
-
-  // Set false to disable pagination
-  enablePagination : Joi.boolean().default(true),
-
-  // Sets the default items-per-page/limit if no limit is provided in the querystring
-  limit : Joi.number().default(30),
-
-  // Sets the maximum items-per-page/limit allowed in the querystring
-  maxLimit : Joi.number(),
-
-  // Enable or disable sorting
-  enableSorting : Joi.boolean().default(true),
-
-  // Sets the default sort attribute
-  defaultSort : Joi.string().default('id'),
-
-  // Sets the default sort diresction
-  defaultSortDir : Joi.allow('asc', 'desc').default('asc'),
-
-  // Sets a list of columns that can be sortable
-  sortableColumns : Joi.array().items(Joi.string()),
-
   // Includes the given relations with the model; equivalent to calling
   // `Model.fetch({ withRelated : <items> })`
   withRelated : Joi.array().items(Joi.string()).default([]),
-
-  // Includes a count of all records that match the filters as a header (named
-  // X-Count by default)
-  includeCount : Joi.boolean().default(false),
-
-  // Name of the header that contains the count of all records
-  countHeaderName : Joi.string().default('X-Count'),
 
   // For POST, PUT, and PATCH methods, this function will be called to perform any
   // necessary transformation of the request payload (such as bcrypting a password).
   // signature: `transform(request, callback)`. The callback accepts the parameters:
   // `callback(err, transformedPayload)`
   transformPayload : Joi.func().optional(),
+
+  filtering : Joi.alternatives().try(
+    Joi.boolean().valid(false),
+    Joi.object().keys({
+      // Whitelisting allows you to define a set of fields that can be filtered on
+      whitelist : Joi.array().items(Joi.string()),
+
+      // Blacklisting allows you to define a set of fields that cannot be filtered on
+      // If `whitelist` is specified, this option will be ignored
+      blacklist : Joi.array().items(Joi.string()),
+    })
+  ).default({
+    whitelist : [],
+    blacklist : [],
+  }),
+
+  pagination : Joi.alternatives().try(
+    Joi.boolean().valid(false),
+    Joi.object().keys({
+      // Sets the default items-per-page/limit if no limit is provided in the querystring
+      defaultLimit : Joi.number().default(30),
+
+      // Sets the maximum items-per-page/limit allowed in the querystring
+      maxLimit : Joi.number(),
+    })
+  ).default({
+    defaultLimit : 30,
+  }),
+
+  sorting : Joi.alternatives().try(
+    Joi.boolean().valid(false),
+    Joi.object().keys({
+      // Sets the default sort field
+      defaultField : Joi.string().default('id'),
+
+      // Sets the default sort diresction
+      defaultDirection : Joi.string().valid('asc', 'desc').default('asc'),
+
+      // Sets a list of columns that can be sortable
+      allowedFields : Joi.array().items(Joi.string()).default([]),
+    })
+  ).default({
+    defaultField : 'id',
+    defaultDirection : 'asc',
+    allowedFields : [],
+  }),
+
+  count : Joi.alternatives().try(
+    Joi.boolean().valid(false),
+    Joi.object().keys({
+      // Name of the header that contains the count of all records
+      headerName : Joi.string().default('X-Count'),
+    })
+  ).default({
+    headerName : 'X-Count',
+  }),
 });
 
 function register(server, options, next) {
 
-  server.handler('crudtacular', function(route, handlerOptions) {
+  server.handler('crudtacular', function crudtacularHandler(route, handlerOptions) {
     let validate = Joi.validate(handlerOptions, handlerOptionsSchema);
     if (validate.error) {
       throw validate.error;
@@ -84,7 +105,7 @@ function register(server, options, next) {
     return handler;
   });
 
-  server.decorate('request', 'getFilters', function() {
+  server.decorate('request', 'getFilters', function getFilters() {
     const settings = this.route.settings.plugins.crudtacular;
     if (! settings) {
       return this.query;
@@ -96,36 +117,45 @@ function register(server, options, next) {
       filters = _.omit(filters, settings.deletedAttr);
     }
 
-    if (settings.enablePagination) {
-      filters = _.omit(filters, 'offset', 'limit', 'sort', 'dir');
+    if (settings.pagination) {
+      filters = _.omit(filters, 'offset', 'limit');
     }
 
-    if (settings.filterWhitelist) {
-      filters = _.pick(filters, settings.filterWhitelist);
-    } else if (settings.filterBlacklist) {
-      filters = _.omit(filters, settings.filterBlacklist);
+    if (settings.sorting) {
+      filters = _.omit(filters, 'sort', 'dir');
     }
+
+    if (settings.filtering && settings.filtering.whitelist.length) {
+      filters = _.pick(filters, settings.filtering.whitelist);
+    } else if (settings.filtering && settings.filtering.blacklist.length) {
+      filters = _.omit(filters, settings.filtering.blacklist);
+    }
+
+    console.log(filters);
 
     return filters;
   });
 
-  server.decorate('request', 'getPaginationOffset', function() {
-    return Number(this.query.offset) || 0;
-  });
-
-  server.decorate('request', 'getPaginationLimit', function() {
+  server.decorate('request', 'getPaginationOptions', function getPaginationOptions() {
     const settings = this.route.settings.plugins.crudtacular;
-
-    let limit = this.query.limit ? this.query.limit : settings.limit;
-
-    if (settings.maxLimit && limit > settings.maxLimit) {
-      limit = settings.maxLimit;
+    if (! settings.pagination) {
+      return false;
     }
 
-    return Number(limit);
+    let offset = this.query.offset || 0;
+    let limit = this.query.limit ? this.query.limit : settings.pagination.defaultLimit;
+
+    if (settings.pagination.maxLimit && limit > settings.pagination.maxLimit) {
+      limit = settings.pagination.maxLimit;
+    }
+
+    return {
+      offset : Number(offset),
+      limit : Number(limit),
+    };
   });
 
-  server.decorate('request', 'getDeletedAttrFilter', function() {
+  server.decorate('request', 'getDeletedAttrFilter', function getDeletedAttrFilter() {
     const settings = this.route.settings.plugins.crudtacular;
 
     let notDeletedValue;
@@ -141,18 +171,19 @@ function register(server, options, next) {
     };
   });
 
-  server.decorate('request', 'getSort', function() {
+  server.decorate('request', 'getSortOptions', function getSortOptions() {
     const settings = this.route.settings.plugins.crudtacular;
 
-    let sort = this.query.sort || settings.defaultSort;
-    let dir = this.query.dir || settings.defaultSortDir;
+    let sort = this.query.sort || settings.sorting.defaultField;
+    let dir = this.query.dir || settings.sorting.defaultDirection;
 
-    if (settings.sortableColumns.length && ! _.contains(settings.sortableColumns, sort)) {
-      sort = settings.defaultSort;
+    let allowedFields = settings.sorting.allowedFields;
+    if (allowedFields.length && ! _.contains(allowedFields, sort)) {
+      sort = settings.sorting.defaultField;
     }
 
     if (dir !== 'asc' && dir !== 'desc') {
-      dir = settings.defaultSortDir;
+      dir = settings.sorting.defaultDirection;
     }
 
     return {

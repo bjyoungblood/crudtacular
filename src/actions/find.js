@@ -7,16 +7,16 @@ function prepareModel(request) {
 
   let filters = request.getFilters();
 
-  if (settings.enablePagination) {
+  if (settings.pagination) {
     model.query((qb) => {
-      let limit = request.getPaginationLimit();
+      let opts = request.getPaginationOptions();
 
-      if (! limit) {
+      if (! opts.limit) {
         return;
       }
 
-      qb.offset(request.getPaginationOffset())
-        .limit(limit);
+      qb.offset(opts.offset)
+        .limit(opts.limit);
     });
   }
 
@@ -36,8 +36,8 @@ export default function(request, reply) {
 
   let results = prepareModel(request);
 
-  if (settings.enableSorting) {
-    let sort = request.getSort();
+  if (settings.sorting) {
+    let sort = request.getSortOptions();
     if (sort.sort) {
       results.query((qb) => {
         qb.orderBy(sort.sort, sort.dir);
@@ -49,7 +49,7 @@ export default function(request, reply) {
     withRelated : settings.withRelated,
   });
 
-  if (settings.includeCount) {
+  if (settings.count) {
     promise.count = prepareModel(request)
       .query((qb) => {
         qb.count();
@@ -62,10 +62,11 @@ export default function(request, reply) {
       let resp = reply(resolved.results.toJSON());
 
       if (resolved.count) {
-        resp.header(settings.countHeaderName, resolved.count.get('count'));
+        resp.header(settings.count.headerName, resolved.count.get('count'));
       }
     })
     .catch((err) => {
+      console.log(err.stack);
       reply(err);
     });
 
