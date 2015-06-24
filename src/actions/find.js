@@ -1,5 +1,6 @@
 import Promise from 'bluebird';
 
+// @todo implementation for fetching from child collections
 function prepareModel(request) {
   let settings = request.route.settings.plugins.crudtacular;
   let model = new settings.model();
