@@ -87,7 +87,6 @@ function get(route) {
 function post(route) {
   switch (route.settings.plugins.crudtacular.type) {
     case 'collection':
-    case 'relatedCollection':
       return actions.create;
     case 'relatedModel':
       return actions.add;
@@ -99,7 +98,6 @@ function post(route) {
 function put(route) {
   switch (route.settings.plugins.crudtacular.type) {
     case 'model':
-    case 'relatedModel':
       return actions.update;
     default:
       throw new Error('Invalid route path for crud: ', route.path);
