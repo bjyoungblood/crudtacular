@@ -28,7 +28,6 @@ function findOneChild(request, reply) {
 
   let promise = model.fetch({
     require : true,
-    withRelated : settings.withRelated,
   })
     .then(() => {
       let child = model.related(settings.relationName);
@@ -39,7 +38,11 @@ function findOneChild(request, reply) {
         });
       });
 
-      return child.fetchOne({ require : true })
+      return child
+        .fetchOne({
+          require : true,
+          withRelated : settings.withRelated,
+        })
         .catch(child.model.NotFoundError, () => {
           throw Boom.notFound();
         });
