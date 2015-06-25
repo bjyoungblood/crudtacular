@@ -28,7 +28,7 @@ function findCollection(request, reply) {
 
   Promise.props(promise)
     .then((resolved) => {
-      let resp = reply(resolved.results.toJSON());
+      let resp = reply(resolved.results.toJSON({ omitPivot : true }));
 
       if (resolved.count) {
         resp.header(settings.count.headerName, resolved.count.get('count'));

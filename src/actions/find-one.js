@@ -11,7 +11,7 @@ function findOneModel(request, reply) {
     require : true,
     withRelated : settings.withRelated,
   })
-    .then(() => model.toJSON())
+    .then(() => model.toJSON({ omitPivot : true }))
     .catch(settings.model.NotFoundError, () => {
       throw Boom.notFound();
     });
