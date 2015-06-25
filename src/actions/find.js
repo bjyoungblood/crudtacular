@@ -1,52 +1,25 @@
+import Boom from 'boom';
 import Promise from 'bluebird';
+import helpers from './helpers';
 
-// @todo implementation for fetching from child collections
-function prepareModel(request) {
-  let settings = request.route.settings.plugins.crudtacular;
-  let model = new settings.model();
-
-  let filters = request.getFilters();
-
-  if (settings.pagination) {
-    model.query((qb) => {
-      let opts = request.getPaginationOptions();
-
-      if (! opts.limit) {
-        return;
-      }
-
-      qb.offset(opts.offset)
-        .limit(opts.limit);
-    });
-  }
-
-  model.where(filters);
-
-  return model;
-}
-
-export default function(request, reply) {
+function findCollection(request, reply) {
   let settings = request.route.settings.plugins.crudtacular;
 
   let promise = {};
+  let model = new settings.model();
 
-  let results = prepareModel(request);
+  helpers.applyPagination(model, request);
+  helpers.applyFilters(model, request);
+  helpers.applySorting(model, request);
 
-  if (settings.sorting) {
-    let sort = request.getSortOptions();
-    if (sort.sort) {
-      results.query((qb) => {
-        qb.orderBy(sort.sort, sort.dir);
-      });
-    }
-  }
-
-  promise.results = results.fetchAll({
+  promise.results = model.fetchAll({
     withRelated : settings.withRelated,
   });
 
   if (settings.count) {
-    promise.count = prepareModel(request)
+    let count = new settings.model();
+    helpers.applyFilters(count, request);
+    promise.count = count
       .query((qb) => {
         qb.count();
       })
@@ -64,5 +37,47 @@ export default function(request, reply) {
     .catch((err) => {
       reply(err);
     });
+}
 
+function findChildCollection(request, reply) {
+  let settings = request.route.settings.plugins.crudtacular;
+
+  let model = new settings.model({
+    id : request.params[settings.idParam],
+  });
+
+  let promise = model.fetch({
+    require : true,
+  })
+    .then(() => {
+      let child = model.related(settings.relationName);
+
+      helpers.applyPagination(child, request);
+      helpers.applyFilters(child, request);
+      helpers.applySorting(child, request);
+
+      return child.fetch({
+        withRelated : settings.withRelated,
+      });
+    })
+    .then((relations) => {
+      return relations.toJSON({
+        omitPivot : true,
+      });
+    })
+    .catch(settings.model.NotFoundError, () => {
+      throw Boom.notFound();
+    });
+
+  reply(promise);
+}
+
+export default function(request, reply) {
+  let settings = request.route.settings.plugins.crudtacular;
+
+  if (settings.type === 'collection') {
+    findCollection(request, reply);
+  } else {
+    findChildCollection(request, reply);
+  }
 }
