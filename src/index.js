@@ -125,8 +125,6 @@ function register(server, options, next) {
       filters = _.omit(filters, settings.filtering.blacklist);
     }
 
-    console.log(filters);
-
     return filters;
   });
 
