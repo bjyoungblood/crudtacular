@@ -11,10 +11,6 @@ export default function(request, reply) {
 
   let payload = _.omit(request.payload, 'id');
 
-  if (settings.deletedAttr) {
-    model.where(request.getDeletedAttrFilter());
-  }
-
   let promise = model.fetch({
     require : true,
     withRelated : settings.withRelated,

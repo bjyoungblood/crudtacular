@@ -15,15 +15,6 @@ let handlerOptionsSchema = Joi.object().keys({
   // Any path prefix. If your path is `/api/users/1`, then the prefix would be `/api`
   pathPrefix : Joi.string().default(''),
 
-  // Using a deleted attribute, you can define a field in your table (e.g., is_deleted)
-  // which will determine whether the record should be included in resultsets.
-  // This option controls the naming of the field.
-  deletedAttr : Joi.string().optional(),
-
-  // Controls the type of the deleted attribute. Boolean could be used for fields
-  // like is_deleted = true/false; timestamp could be used for deleted_at = NOW()
-  deletedAttrType : Joi.allow([ 'boolean', 'timestamp' ]).default('boolean'),
-
   // Includes the given relations with the model; equivalent to calling
   // `Model.fetch({ withRelated : <items> })`
   withRelated : Joi.array().items(Joi.string()).default([]),
@@ -107,10 +98,6 @@ function register(server, options, next) {
 
     let filters = this.query;
 
-    if (settings.deletedAttr) {
-      filters = _.omit(filters, settings.deletedAttr);
-    }
-
     if (settings.pagination) {
       filters = _.omit(filters, 'offset', 'limit');
     }
@@ -144,22 +131,6 @@ function register(server, options, next) {
     return {
       offset : Number(offset),
       limit : Number(limit),
-    };
-  });
-
-  server.decorate('request', 'getDeletedAttrFilter', function getDeletedAttrFilter() {
-    const settings = this.route.settings.plugins.crudtacular;
-
-    let notDeletedValue;
-
-    if (settings.deletedAttrType === 'boolean') {
-      notDeletedValue = false;
-    } else {
-      notDeletedValue = null;
-    }
-
-    return {
-      [ settings.deletedAttr ] : notDeletedValue,
     };
   });
 

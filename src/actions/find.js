@@ -20,10 +20,6 @@ function prepareModel(request) {
     });
   }
 
-  if (settings.deletedAttr) {
-    model.where(request.getDeletedAttrFilter());
-  }
-
   model.where(filters);
 
   return model;

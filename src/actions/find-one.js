@@ -8,10 +8,6 @@ export default function(request, reply) {
     id : request.params[settings.idParam],
   });
 
-  if (settings.deletedAttr) {
-    model.where(request.getDeletedAttrFilter());
-  }
-
   let promise = model.fetch({
     require : true,
     withRelated : settings.withRelated,
