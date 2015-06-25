@@ -7,8 +7,8 @@ export default function(request, reply) {
   return model
     .save()
     .then((savedModel) => {
-      return savedModel.toJSON();
+      return reply(savedModel.toJSON()).code(201);
     })
-    .nodeify(reply);
+    .catch(reply);
 
 }
