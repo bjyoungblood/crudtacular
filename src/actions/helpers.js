@@ -16,7 +16,9 @@ function applyPagination(model, request) {
 }
 
 function applyFilters(model, request) {
-  model.where(request.getFilters());
+  model.query((qb) => {
+    qb.where(request.getFilters());
+  });
 }
 
 function applySorting(model, request) {
