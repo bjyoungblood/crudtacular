@@ -1,4 +1,3 @@
-// @todo implementation for adding to child collections
 export default function(request, reply) {
   let settings = request.route.settings.plugins.crudtacular;
 

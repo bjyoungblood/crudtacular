@@ -1,6 +1,5 @@
 import Boom from 'boom';
 
-// @todo implementation for child collections
 export default function(request, reply) {
   let settings = request.route.settings.plugins.crudtacular;
 
