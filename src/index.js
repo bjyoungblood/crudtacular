@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import Joi from 'joi';
 
 import { getHandler } from './route-settings';
@@ -88,71 +87,6 @@ function register(server, options, next) {
 
     let handler = getHandler(route, handlerOptions);
     return handler;
-  });
-
-  server.decorate('request', 'getFilters', function getFilters() {
-    const settings = this.route.settings.plugins.crudtacular;
-    if (! settings) {
-      return this.query;
-    }
-
-    let filters = this.query;
-
-    if (settings.pagination) {
-      filters = _.omit(filters, 'offset', 'limit');
-    }
-
-    if (settings.sorting) {
-      filters = _.omit(filters, 'sort', 'dir');
-    }
-
-    if (settings.filtering && settings.filtering.whitelist.length) {
-      filters = _.pick(filters, settings.filtering.whitelist);
-    } else if (settings.filtering && settings.filtering.blacklist.length) {
-      filters = _.omit(filters, settings.filtering.blacklist);
-    }
-
-    return filters;
-  });
-
-  server.decorate('request', 'getPaginationOptions', function getPaginationOptions() {
-    const settings = this.route.settings.plugins.crudtacular;
-    if (! settings.pagination) {
-      return false;
-    }
-
-    let offset = this.query.offset || 0;
-    let limit = this.query.limit ? this.query.limit : settings.pagination.defaultLimit;
-
-    if (settings.pagination.maxLimit && limit > settings.pagination.maxLimit) {
-      limit = settings.pagination.maxLimit;
-    }
-
-    return {
-      offset : Number(offset),
-      limit : Number(limit),
-    };
-  });
-
-  server.decorate('request', 'getSortOptions', function getSortOptions() {
-    const settings = this.route.settings.plugins.crudtacular;
-
-    let sort = this.query.sort || settings.sorting.defaultField;
-    let dir = this.query.dir || settings.sorting.defaultDirection;
-
-    let allowedFields = settings.sorting.allowedFields;
-    if (allowedFields.length && ! _.contains(allowedFields, sort)) {
-      sort = settings.sorting.defaultField;
-    }
-
-    if (dir !== 'asc' && dir !== 'desc') {
-      dir = settings.sorting.defaultDirection;
-    }
-
-    return {
-      sort,
-      dir,
-    };
   });
 
   return next();
