@@ -1,6 +1,6 @@
 {
   "name": "crudtacular",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Auto-generated CRUD routes for Hapi and Bookshelf",
   "main": "dist/index.js",
   "scripts": {
