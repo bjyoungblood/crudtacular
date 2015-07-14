@@ -7,7 +7,7 @@ function applyPagination(model, request) {
     return;
   }
 
-  model.query((qb) => {
+  settings.model.query((qb) => {
     let offset = request.query.offset || 0;
     let limit = request.query.limit ? request.query.limit : settings.pagination.defaultLimit;
 
@@ -43,7 +43,7 @@ function applyFilters(model, request) {
     return;
   }
 
-  model.query((qb) => {
+  settings.model.query((qb) => {
     qb.where(filters);
   });
 }
@@ -67,7 +67,7 @@ function applySorting(model, request) {
     dir = settings.sorting.defaultDirection;
   }
 
-  model.query((qb) => {
+  settings.model.query((qb) => {
     qb.orderBy(sort, dir);
   });
 }
