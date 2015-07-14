@@ -36,6 +36,10 @@ let handlerOptionsSchema = Joi.object().keys({
   pagination : Joi.alternatives().try(
     Joi.boolean().valid(false),
     Joi.object().keys({
+      // offset allows ?offset=0&limit=10
+      // page allows ?page=1&per_page=10
+      style : Joi.string().allow('offset', 'page').default('page'),
+
       // Sets the default items-per-page/limit if no limit is provided in the querystring
       defaultLimit : Joi.number().default(30),
 
@@ -43,6 +47,7 @@ let handlerOptionsSchema = Joi.object().keys({
       maxLimit : Joi.number(),
     })
   ).default({
+    style : 'offset',
     defaultLimit : 30,
   }),
 

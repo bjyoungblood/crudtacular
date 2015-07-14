@@ -8,11 +8,25 @@ function applyPagination(model, request) {
   }
 
   model.query((qb) => {
-    let offset = request.query.offset || 0;
-    let limit = request.query.limit ? request.query.limit : settings.pagination.defaultLimit;
 
-    if (settings.pagination.maxLimit && limit > settings.pagination.maxLimit) {
-      limit = settings.pagination.maxLimit;
+    let offset;
+    let limit;
+
+    if (settings.pagination.style === 'offset') {
+      offset = request.query.offset || 0;
+      limit = request.query.limit ? request.query.limit : settings.pagination.defaultLimit;
+
+      if (settings.pagination.maxLimit && limit > settings.pagination.maxLimit) {
+        limit = settings.pagination.maxLimit;
+      }
+    } else {
+      limit = request.query.per_page ? request.query.per_page : settings.pagination.defaultLimit;
+
+      if (settings.pagination.maxLimit && limit > settings.pagination.maxLimit) {
+        limit = settings.pagination.maxLimit;
+      }
+
+      offset = (request.query.page - 1) * limit;
     }
 
     if (! limit) {
@@ -31,7 +45,20 @@ function applyFilters(model, request) {
     return;
   }
 
-  let filters = _.omit(request.query, 'sort', 'dir', 'offset', 'limit');
+  let filters = request.query;
+
+  console.log(settings.pagination);
+  if (settings.pagination) {
+    if (settings.pagination.style === 'offset') {
+      filters = _.omit(filters, 'offset', 'limit');
+    } else {
+      filters = _.omit(filters, 'page', 'per_page');
+    }
+  }
+
+  if (settings.sorting) {
+    filters = _.omit(filters, 'sort', 'dir');
+  }
 
   if (settings.filtering && settings.filtering.whitelist.length) {
     filters = _.pick(filters, settings.filtering.whitelist);
