@@ -8,18 +8,20 @@ simple CRUD routes are ready to go without additional setup.
 
 # NPM Installation
 
-`npm install crudtacular`
+`npm install --save crudtacular`
 
 # Hapi Plugin Integration
 
 When defining your Hapi plugins, require the following file and add it to the array
 of plugins that Hapi should use.
 
-export default function(server) {
-  return server.registerAsync({
-    register : require('crudtacular'),
-  });
-}
+```
+server.register({
+  register : require('crudtacular'),
+}, function(err) {
+  if (err) throw err;
+});
+```
 
 # Examples
 
