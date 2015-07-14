@@ -47,7 +47,6 @@ function applyFilters(model, request) {
 
   let filters = request.query;
 
-  console.log(settings.pagination);
   if (settings.pagination) {
     if (settings.pagination.style === 'offset') {
       filters = _.omit(filters, 'offset', 'limit');
